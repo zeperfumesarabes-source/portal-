@@ -1,0 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-livelo-dark: #070B19;
+  --color-livelo-navy: #0D1636;
+  --color-livelo-pink: #E6007E;
+  --color-livelo-pink-hover: #C5006B;
+  --color-livelo-pink-light: #FFEBf5;
+  --color-livelo-indigo: #1A285A;
+}
+
+@layer utilities {
+  .glow-pink {
+    box-shadow: 0 0 20px rgba(230, 0, 126, 0.45);
+  }
+  .glow-green {
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.45);
+  }
+  .pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+}
+
+body {
+  background-color: var(--color-livelo-dark);
+  color: #F8FAFC;
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Resgate de Pontos Livelo",
+  "description": "Fale com um especialista para resgatar seus pontos Livelo em viagens, passagens aéreas, hotéis e muito mais de forma segura e rápida.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
