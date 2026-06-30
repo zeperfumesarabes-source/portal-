@@ -1,6 +1,6 @@
 import React from 'react';
 import { Plane, Building2, Ship, ShoppingBag, ArrowUpRight } from 'lucide-react';
-import { CATEGORIES, getWhatsAppLink } from '../data';
+import { CATEGORIES, getWhatsAppLink, logWhatsAppClick } from '../data';
 
 export default function Categories() {
   const getIcon = (iconName: string) => {
@@ -18,7 +18,8 @@ export default function Categories() {
     }
   };
 
-  const handleCategoryClick = (msg: string) => {
+  const handleCategoryClick = (title: string, msg: string) => {
+    logWhatsAppClick(`Categoria Card (${title})`, msg);
     window.open(getWhatsAppLink(msg), '_blank');
   };
 
@@ -47,7 +48,7 @@ export default function Categories() {
           {CATEGORIES.map((cat) => (
             <div
               key={cat.id}
-              onClick={() => handleCategoryClick(cat.whatsappMessage)}
+              onClick={() => handleCategoryClick(cat.title, cat.whatsappMessage)}
               className="bg-[#0D1636]/60 hover:bg-[#0D1636] border border-[#1A285A]/50 hover:border-[#E6007E]/50 rounded-2xl p-6 transition-all duration-300 group cursor-pointer hover:-translate-y-1 flex flex-col justify-between h-full relative"
             >
               <div>

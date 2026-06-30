@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { MessageSquare } from 'lucide-react';
 import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
@@ -7,12 +7,38 @@ import Categories from './components/Categories';
 import Features from './components/Features';
 import ContactSection from './components/ContactSection';
 import Footer from './components/Footer';
-import { getWhatsAppLink } from './data';
+import AdminPanel from './components/AdminPanel';
+import { getWhatsAppLink, logWhatsAppClick } from './data';
 
 export default function App() {
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+
+  useEffect(() => {
+    // Check initial hash
+    const checkHash = () => {
+      setIsAdmin(window.location.hash === '#admin');
+    };
+    checkHash();
+
+    // Listen to changes
+    window.addEventListener('hashchange', checkHash);
+    return () => window.removeEventListener('hashchange', checkHash);
+  }, []);
+
   const handleFloatingWap = () => {
-    window.open(getWhatsAppLink('Olá! Acessei o site através do celular e gostaria de atendimento imediato para meus pontos Livelo.'), '_blank');
+    const message = 'Olá! Acessei o site através do celular e gostaria de atendimento imediato para meus pontos Livelo.';
+    logWhatsAppClick('Floating Widget', message);
+    window.open(getWhatsAppLink(message), '_blank');
   };
+
+  const handleBackToSite = () => {
+    window.location.hash = '';
+    setIsAdmin(false);
+  };
+
+  if (isAdmin) {
+    return <AdminPanel onBack={handleBackToSite} />;
+  }
 
   return (
     <div className="relative min-h-screen bg-[#070B19] text-slate-100 flex flex-col justify-between selection:bg-[#E6007E]/30 selection:text-white">

@@ -1,7 +1,88 @@
 import { CategoryItem, RedemptionOption, TrustFactor } from './types';
 
-export const WHATSAPP_NUMBER = '5573998630223';
-export const WHATSAPP_FORMATTED = '(73) 99863-0223';
+export interface AppConfig {
+  whatsappNumber: string;
+  whatsappFormatted: string;
+}
+
+const DEFAULT_CONFIG: AppConfig = {
+  whatsappNumber: '5573998630223',
+  whatsappFormatted: '(73) 99863-0223',
+};
+
+export function getConfig(): AppConfig {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('livelo_config');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        // Fallback
+      }
+    }
+  }
+  return DEFAULT_CONFIG;
+}
+
+export function saveConfig(config: AppConfig) {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('livelo_config', JSON.stringify(config));
+  }
+}
+
+export interface LeadClick {
+  id: string;
+  timestamp: string;
+  category: string;
+  message: string;
+}
+
+export function logWhatsAppClick(category: string, message: string) {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('livelo_leads');
+    let leads: LeadClick[] = [];
+    if (saved) {
+      try {
+        leads = JSON.parse(saved);
+      } catch (e) {
+        // Fallback
+      }
+    }
+    const newLead: LeadClick = {
+      id: Math.random().toString(36).substr(2, 9),
+      timestamp: new Date().toISOString(),
+      category,
+      message,
+    };
+    leads.unshift(newLead);
+    // Keep last 100 leads
+    if (leads.length > 100) {
+      leads = leads.slice(0, 100);
+    }
+    localStorage.setItem('livelo_leads', JSON.stringify(leads));
+  }
+}
+
+export function getWhatsAppClicks(): LeadClick[] {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('livelo_leads');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        // Fallback
+      }
+    }
+  }
+  return [];
+}
+
+export function getWhatsAppLink(message: string): string {
+  const config = getConfig();
+  const cleanNumber = config.whatsappNumber.replace(/\D/g, '');
+  const encodedText = encodeURIComponent(message);
+  return `https://wa.me/${cleanNumber}?text=${encodedText}`;
+}
 
 export const CATEGORIES: CategoryItem[] = [
   {
@@ -153,8 +234,3 @@ export const REDEMPTION_OPTIONS: RedemptionOption[] = [
     estimatedValue: 'R$ 8.000 - R$ 16.000',
   },
 ];
-
-export function getWhatsAppLink(message: string): string {
-  const encodedText = encodeURIComponent(message);
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedText}`;
-}

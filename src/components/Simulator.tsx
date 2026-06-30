@@ -1,10 +1,16 @@
 import React, { useState, useMemo } from 'react';
-import { Coins, HelpCircle, ArrowRight, Plane, Building2, Ship, ShoppingBag, Sparkles } from 'lucide-react';
-import { REDEMPTION_OPTIONS, getWhatsAppLink } from '../data';
+import { Coins, HelpCircle, ArrowRight, Plane, Building2, Ship, ShoppingBag, Sparkles, User, FileText, Mail, ShieldCheck } from 'lucide-react';
+import { REDEMPTION_OPTIONS, getWhatsAppLink, logWhatsAppClick } from '../data';
 
 export default function Simulator() {
   const [points, setPoints] = useState<number>(45000);
   const [category, setCategory] = useState<string>('Passagens');
+
+  // New Customer States for Simulator
+  const [userName, setUserName] = useState<string>('');
+  const [userCpf, setUserCpf] = useState<string>('');
+  const [userEmail, setUserEmail] = useState<string>('');
+  const [userPix, setUserPix] = useState<string>('');
 
   // Filter the options that fit the current points range and selected category
   const activeOptions = useMemo(() => {
@@ -20,8 +26,22 @@ export default function Simulator() {
   const handleWhatsappSimulate = () => {
     const formattedPoints = points.toLocaleString('pt-BR');
     const rewardTitle = activeOptions.length > 0 ? activeOptions[0].title : 'Viagem Especial';
-    const message = `Olá! Fiz uma simulação no site com ${formattedPoints} pontos na categoria de ${category}. Tenho interesse em resgatar o benefício: ${rewardTitle}. Gostaria de falar com um especialista.`;
-    window.open(getWhatsAppLink(message), '_blank');
+    
+    let baseMessage = `Olá! Fiz uma simulação no site com ${formattedPoints} pontos na categoria de ${category}. Tenho interesse em resgatar o benefício: *${rewardTitle}*. Gostaria de falar com um especialista.`;
+    
+    const details: string[] = [];
+    if (userName.trim()) details.push(`👤 *Nome:* ${userName.trim()}`);
+    if (userCpf.trim()) details.push(`🪪 *CPF:* ${userCpf.trim()}`);
+    if (userEmail.trim()) details.push(`📧 *E-mail Livelo:* ${userEmail.trim()}`);
+    if (userPix.trim()) details.push(`🔑 *Chave PIX:* ${userPix.trim()}`);
+
+    let finalMessage = baseMessage;
+    if (details.length > 0) {
+      finalMessage += `\n\n*Meus Dados Cadastrais:*\n${details.join('\n')}`;
+    }
+
+    logWhatsAppClick(`Simulador (${category})`, finalMessage);
+    window.open(getWhatsAppLink(finalMessage), '_blank');
   };
 
   return (
@@ -114,10 +134,10 @@ export default function Simulator() {
                 </div>
               </div>
 
-            </div>
+              </div>
 
             {/* Right Rewards Output Column */}
-            <div className="bg-gradient-to-b from-[#070B19] to-[#121B3F] p-6 sm:p-8 rounded-2xl border border-[#1A285A]/60 flex flex-col justify-between h-full min-h-[300px]">
+            <div className="bg-gradient-to-b from-[#070B19] to-[#121B3F] p-6 sm:p-8 rounded-2xl border border-[#1A285A]/60 flex flex-col justify-between h-full min-h-[300px] self-stretch">
               
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded border border-emerald-500/20 inline-block mb-3 animate-pulse">
@@ -155,15 +175,70 @@ export default function Simulator() {
                 )}
               </div>
 
+              {/* Optional Client Information inside Simulator right column next to the button */}
+              <div className="pt-5 mt-5 border-t border-[#1A285A] space-y-3">
+                <span className="text-[10px] font-bold text-[#E6007E] uppercase tracking-wider block flex items-center">
+                  <ShieldCheck className="w-3.5 h-3.5 mr-1" /> Insira seus dados para resgatar:
+                </span>
+                
+                <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="relative">
+                      <User className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-500" />
+                      <input
+                        type="text"
+                        value={userName}
+                        onChange={(e) => setUserName(e.target.value)}
+                        placeholder="Nome Completo"
+                        className="w-full bg-[#070B19] border border-[#1A285A] rounded-lg pl-8 pr-2 py-2 text-xs text-slate-100 placeholder-gray-600 focus:outline-none focus:border-[#E6007E] transition-all"
+                      />
+                    </div>
+                    <div className="relative">
+                      <FileText className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-500" />
+                      <input
+                        type="text"
+                        value={userCpf}
+                        onChange={(e) => setUserCpf(e.target.value)}
+                        placeholder="CPF do Titular"
+                        className="w-full bg-[#070B19] border border-[#1A285A] rounded-lg pl-8 pr-2 py-2 text-xs text-slate-100 placeholder-gray-600 focus:outline-none focus:border-[#E6007E] transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="relative">
+                      <Mail className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-500" />
+                      <input
+                        type="email"
+                        value={userEmail}
+                        onChange={(e) => setUserEmail(e.target.value)}
+                        placeholder="E-mail Livelo"
+                        className="w-full bg-[#070B19] border border-[#1A285A] rounded-lg pl-8 pr-2 py-2 text-xs text-slate-100 placeholder-gray-600 focus:outline-none focus:border-[#E6007E] transition-all"
+                      />
+                    </div>
+                    <div className="relative">
+                      <Coins className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-500" />
+                      <input
+                        type="text"
+                        value={userPix}
+                        onChange={(e) => setUserPix(e.target.value)}
+                        placeholder="Chave PIX (Opcional)"
+                        className="w-full bg-[#070B19] border border-[#1A285A] rounded-lg pl-8 pr-2 py-2 text-xs text-slate-100 placeholder-gray-600 focus:outline-none focus:border-[#E6007E] transition-all"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Action Button inside simulator card */}
-              <div className="pt-6 mt-6 border-t border-[#1A285A]">
+              <div className="pt-4 mt-4 border-t border-[#1A285A]">
                 <button
                   onClick={handleWhatsappSimulate}
                   id="simulate-whatsapp-cta"
                   className="w-full inline-flex items-center justify-center space-x-2 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold py-3.5 px-6 rounded-xl text-xs uppercase tracking-widest transition-all shadow-lg hover:scale-[1.02] active:scale-95 cursor-pointer glow-green"
                 >
                   <Sparkles className="w-4 h-4 text-white animate-pulse" />
-                  <span>Resgatar Pelo WhatsApp</span>
+                  <span>Falar com Especialista</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -178,3 +253,4 @@ export default function Simulator() {
     </section>
   );
 }
+

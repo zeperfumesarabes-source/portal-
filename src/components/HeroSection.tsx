@@ -1,11 +1,13 @@
 import React from 'react';
 import { ArrowRight, Sparkles, ShieldCheck, Plane, Building2, Ship, ShoppingBag } from 'lucide-react';
-import { getWhatsAppLink, WHATSAPP_FORMATTED } from '../data';
+import { getWhatsAppLink, logWhatsAppClick } from '../data';
 import heroImage from '../assets/images/cruise_hero_banner_1782605095148.jpg';
 
 export default function HeroSection() {
   const handleWap = () => {
-    window.open(getWhatsAppLink('Olá! Gostaria de falar com um especialista em resgate de pontos Livelo para planejar minha próxima viagem.'), '_blank');
+    const message = 'Olá! Gostaria de falar com um especialista em resgate de pontos Livelo para planejar minha próxima viagem.';
+    logWhatsAppClick('Hero Primary CTA', message);
+    window.open(getWhatsAppLink(message), '_blank');
   };
 
   return (

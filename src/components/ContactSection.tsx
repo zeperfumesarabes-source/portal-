@@ -1,10 +1,18 @@
 import React, { useState } from 'react';
-import { MessageSquare, Phone, Send, CheckCircle2 } from 'lucide-react';
-import { getWhatsAppLink, WHATSAPP_FORMATTED, WHATSAPP_NUMBER } from '../data';
+import { MessageSquare, Phone, Send, CheckCircle2, User, FileText, Mail, Coins, ShieldCheck } from 'lucide-react';
+import { getWhatsAppLink, getConfig, logWhatsAppClick } from '../data';
 
 export default function ContactSection() {
   const [selectedSubject, setSelectedSubject] = useState<string>('viagem');
   const [customDestination, setCustomDestination] = useState<string>('');
+  
+  // New Customer Information States
+  const [userName, setUserName] = useState<string>('');
+  const [userCpf, setUserCpf] = useState<string>('');
+  const [userEmail, setUserEmail] = useState<string>('');
+  const [userPix, setUserPix] = useState<string>('');
+
+  const config = getConfig();
 
   const subjects = [
     { id: 'viagem', label: 'Planejar Viagem', msg: 'Olá! Tenho pontos Livelo e gostaria de planejar minha próxima viagem de férias.' },
@@ -14,15 +22,28 @@ export default function ContactSection() {
   ];
 
   const handleContactClick = () => {
-    let finalMessage = '';
+    let baseMessage = '';
     const found = subjects.find(s => s.id === selectedSubject);
     
     if (selectedSubject === 'viagem' && customDestination.trim() !== '') {
-      finalMessage = `Olá! Tenho pontos Livelo e gostaria de planejar uma viagem para ${customDestination.trim()}. Podem me ajudar?`;
+      baseMessage = `Olá! Tenho pontos Livelo e gostaria de planejar uma viagem para *${customDestination.trim()}*.`;
     } else {
-      finalMessage = found ? found.msg : 'Olá! Gostaria de falar com o especialista em pontos Livelo.';
+      baseMessage = found ? found.msg : 'Olá! Gostaria de falar com o especialista em pontos Livelo.';
     }
 
+    // Build the cadastral details to append to the WhatsApp message
+    const details: string[] = [];
+    if (userName.trim()) details.push(`👤 *Nome:* ${userName.trim()}`);
+    if (userCpf.trim()) details.push(`🪪 *CPF:* ${userCpf.trim()}`);
+    if (userEmail.trim()) details.push(`📧 *E-mail Livelo:* ${userEmail.trim()}`);
+    if (userPix.trim()) details.push(`🔑 *Chave PIX:* ${userPix.trim()}`);
+
+    let finalMessage = baseMessage;
+    if (details.length > 0) {
+      finalMessage += `\n\n*Meus Dados de Contato:*\n${details.join('\n')}`;
+    }
+
+    logWhatsAppClick(`Formulário (${found ? found.label : 'Geral'})`, finalMessage);
     window.open(getWhatsAppLink(finalMessage), '_blank');
   };
 
@@ -37,9 +58,9 @@ export default function ContactSection() {
         {/* Main WhatsApp callout card mimicking the flyer */}
         <div className="bg-[#0D1636] border-2 border-[#1A285A] rounded-[36px] p-8 sm:p-14 shadow-2xl relative">
           
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
             
-            {/* Left Info Column */}
+            {/* Left Info & Form Column */}
             <div className="lg:col-span-7 space-y-6">
               
               <div className="inline-flex items-center space-x-2 bg-pink-500/10 text-[#E6007E] border border-pink-500/20 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest">
@@ -52,7 +73,7 @@ export default function ContactSection() {
               </h2>
 
               <p className="text-slate-300 text-sm sm:text-base font-light">
-                Atendimento personalizado para você aproveitar o melhor dos seus pontos. Evite erros comuns e aproveite milhas turbinadas com facilidade.
+                Atendimento personalizado para você aproveitar o melhor dos seus pontos. Preencha seus dados cadastrais abaixo para um resgate 3x mais ágil!
               </p>
 
               {/* Fast selector options */}
@@ -91,10 +112,83 @@ export default function ContactSection() {
                 </div>
               )}
 
+              {/* ────────────────── CUSTOMER DATA FORM ────────────────── */}
+              <div className="bg-[#070B19]/50 border border-[#1A285A]/60 rounded-2xl p-5 space-y-4">
+                <p className="text-xs font-bold text-[#E6007E] uppercase tracking-widest flex items-center">
+                  <ShieldCheck className="w-4 h-4 mr-1.5" /> Dados para Agilizar seu Atendimento:
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Nome input */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Nome Completo</label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
+                      <input
+                        type="text"
+                        value={userName}
+                        onChange={(e) => setUserName(e.target.value)}
+                        placeholder="Nome do Cliente"
+                        className="w-full bg-[#070B19] border border-[#1A285A] rounded-xl pl-9 pr-3 py-2 text-xs text-slate-100 placeholder-gray-600 focus:outline-none focus:border-[#E6007E] transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  {/* CPF Input */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">CPF do Titular</label>
+                    <div className="relative">
+                      <FileText className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
+                      <input
+                        type="text"
+                        value={userCpf}
+                        onChange={(e) => setUserCpf(e.target.value)}
+                        placeholder="000.000.000-00"
+                        className="w-full bg-[#070B19] border border-[#1A285A] rounded-xl pl-9 pr-3 py-2 text-xs text-slate-100 placeholder-gray-600 focus:outline-none focus:border-[#E6007E] transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Email Livelo Input */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">E-mail Cadastrado na Livelo</label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
+                      <input
+                        type="email"
+                        value={userEmail}
+                        onChange={(e) => setUserEmail(e.target.value)}
+                        placeholder="seu-email@exemplo.com"
+                        className="w-full bg-[#070B19] border border-[#1A285A] rounded-xl pl-9 pr-3 py-2 text-xs text-slate-100 placeholder-gray-600 focus:outline-none focus:border-[#E6007E] transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  {/* PIX Input */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Chave PIX (Opcional)</label>
+                    <div className="relative">
+                      <Coins className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
+                      <input
+                        type="text"
+                        value={userPix}
+                        onChange={(e) => setUserPix(e.target.value)}
+                        placeholder="Celular, CPF ou E-mail para recebimento"
+                        className="w-full bg-[#070B19] border border-[#1A285A] rounded-xl pl-9 pr-3 py-2 text-xs text-slate-100 placeholder-gray-600 focus:outline-none focus:border-[#E6007E] transition-all"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-[10px] text-gray-500 leading-tight">
+                  🔒 Seus dados cadastrais não são guardados em nenhum banco de dados online. Eles são enviados de forma direta e segura no texto do seu próprio WhatsApp.
+                </p>
+              </div>
+
             </div>
 
             {/* Right Form & Large CTA button column */}
-            <div className="lg:col-span-5 flex flex-col items-center justify-center text-center space-y-6 lg:border-l lg:border-[#1A285A]/60 lg:pl-10">
+            <div className="lg:col-span-5 flex flex-col items-center justify-center text-center space-y-6 lg:border-l lg:border-[#1A285A]/60 lg:pl-10 self-center">
               
               {/* WhatsApp Icon wrapper with pulse ripple */}
               <div className="relative">
@@ -110,7 +204,7 @@ export default function ContactSection() {
                 <div className="bg-[#070B19] border border-[#E6007E]/40 py-4 px-6 rounded-2xl flex items-center justify-center space-x-3 shadow-inner glow-pink">
                   <Phone className="w-5 h-5 text-[#E6007E]" />
                   <span className="text-xl sm:text-2xl font-black text-slate-100 font-mono tracking-wider">
-                    {WHATSAPP_FORMATTED}
+                    {config.whatsappFormatted}
                   </span>
                 </div>
               </div>
@@ -140,3 +234,4 @@ export default function ContactSection() {
     </section>
   );
 }
+
