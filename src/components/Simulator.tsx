@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Coins, HelpCircle, ArrowRight, Plane, Building2, Ship, ShoppingBag, Sparkles, User, FileText, Mail, ShieldCheck } from 'lucide-react';
+import { Coins, HelpCircle, ArrowRight, Plane, Building2, Ship, ShoppingBag, Sparkles, User, FileText, Mail, ShieldCheck, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { REDEMPTION_OPTIONS, getWhatsAppLink, logWhatsAppClick, getCustomerProfile, saveCustomerProfile } from '../data';
 
 export default function Simulator() {
@@ -11,6 +11,9 @@ export default function Simulator() {
   const [userCpf, setUserCpf] = useState<string>('');
   const [userEmail, setUserEmail] = useState<string>('');
   const [userPix, setUserPix] = useState<string>('');
+
+  const [registerStatus, setRegisterStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   useEffect(() => {
     const loadProfile = () => {
@@ -34,12 +37,44 @@ export default function Simulator() {
     if (key === 'cpf') setUserCpf(value);
     if (key === 'email') setUserEmail(value);
     if (key === 'pix') setUserPix(value);
+  };
 
-    const current = getCustomerProfile();
+  const handleRegisterCustomer = () => {
+    const cleanName = userName.trim();
+    const cleanCpf = userCpf.trim();
+    const cleanEmail = userEmail.trim();
+    const cleanPix = userPix.trim();
+
+    if (!cleanName) {
+      setRegisterStatus('error');
+      setErrorMessage('Por favor, informe seu Nome Completo.');
+      return;
+    }
+    if (!cleanCpf) {
+      setRegisterStatus('error');
+      setErrorMessage('Por favor, informe seu CPF.');
+      return;
+    }
+    if (!cleanEmail) {
+      setRegisterStatus('error');
+      setErrorMessage('Por favor, informe seu E-mail Livelo.');
+      return;
+    }
+
     saveCustomerProfile({
-      ...current,
-      [key]: value
+      name: cleanName,
+      cpf: cleanCpf,
+      email: cleanEmail,
+      pix: cleanPix
     });
+
+    setRegisterStatus('success');
+    setErrorMessage('');
+
+    // Auto reset success message after 5 seconds
+    setTimeout(() => {
+      setRegisterStatus('idle');
+    }, 5000);
   };
 
   // Filter the options that fit the current points range and selected category
@@ -54,16 +89,31 @@ export default function Simulator() {
   }, [points, category]);
 
   const handleWhatsappSimulate = () => {
+    const cleanName = userName.trim();
+    const cleanCpf = userCpf.trim();
+    const cleanEmail = userEmail.trim();
+    const cleanPix = userPix.trim();
+
+    // Auto-save registration backup to admin database if at least one detail is entered
+    if (cleanName || cleanCpf || cleanEmail) {
+      saveCustomerProfile({
+        name: cleanName,
+        cpf: cleanCpf,
+        email: cleanEmail,
+        pix: cleanPix
+      });
+    }
+
     const formattedPoints = points.toLocaleString('pt-BR');
     const rewardTitle = activeOptions.length > 0 ? activeOptions[0].title : 'Viagem Especial';
     
     let baseMessage = `Olá! Fiz uma simulação no site com ${formattedPoints} pontos na categoria de ${category}. Tenho interesse em resgatar o benefício: *${rewardTitle}*. Gostaria de falar com um especialista.`;
     
     const details: string[] = [];
-    if (userName.trim()) details.push(`👤 *Nome:* ${userName.trim()}`);
-    if (userCpf.trim()) details.push(`🪪 *CPF:* ${userCpf.trim()}`);
-    if (userEmail.trim()) details.push(`📧 *E-mail Livelo:* ${userEmail.trim()}`);
-    if (userPix.trim()) details.push(`🔑 *Chave PIX:* ${userPix.trim()}`);
+    if (cleanName) details.push(`👤 *Nome:* ${cleanName}`);
+    if (cleanCpf) details.push(`🪪 *CPF:* ${cleanCpf}`);
+    if (cleanEmail) details.push(`📧 *E-mail Livelo:* ${cleanEmail}`);
+    if (cleanPix) details.push(`🔑 *Chave PIX:* ${cleanPix}`);
 
     let finalMessage = baseMessage;
     if (details.length > 0) {
@@ -257,6 +307,29 @@ export default function Simulator() {
                       />
                     </div>
                   </div>
+
+                  {registerStatus === 'success' && (
+                    <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] py-2 px-3 rounded-lg flex items-center gap-2 animate-fadeIn font-medium mt-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>Cadastro salvo no Painel! Prossiga abaixo para falar com o especialista.</span>
+                    </div>
+                  )}
+
+                  {registerStatus === 'error' && (
+                    <div className="bg-rose-500/10 border border-rose-500/30 text-rose-400 text-[11px] py-2 px-3 rounded-lg flex items-center gap-2 animate-fadeIn font-medium mt-2">
+                      <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+                      <span>{errorMessage}</span>
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={handleRegisterCustomer}
+                    className="w-full inline-flex items-center justify-center space-x-1.5 bg-gradient-to-r from-[#E6007E] to-[#C5006B] hover:from-[#C5006B] hover:to-[#A30054] text-white font-bold py-2.5 px-4 rounded-lg text-xs uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer mt-2"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>Cadastrar Dados</span>
+                  </button>
                 </div>
               </div>
 

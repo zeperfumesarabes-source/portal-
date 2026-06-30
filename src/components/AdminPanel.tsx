@@ -13,9 +13,15 @@ import {
   Award,
   Calendar,
   Sparkles,
-  ArrowLeft
+  ArrowLeft,
+  Copy,
+  Check,
+  Search,
+  Trash2,
+  Download,
+  Database
 } from 'lucide-react';
-import { getConfig, saveConfig, getWhatsAppClicks, LeadClick } from '../data';
+import { getConfig, saveConfig, getWhatsAppClicks, LeadClick, getCustomersList, CustomerRegistration } from '../data';
 
 interface AdminPanelProps {
   onBack: () => void;
@@ -30,13 +36,20 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
   const [whatsappNumber, setWhatsappNumber] = useState<string>('');
   const [whatsappFormatted, setWhatsappFormatted] = useState<string>('');
   const [leads, setLeads] = useState<LeadClick[]>([]);
+  const [customers, setCustomers] = useState<CustomerRegistration[]>([]);
   const [successMsg, setSuccessMsg] = useState<string>('');
+  
+  // Tab and searching states
+  const [activeTab, setActiveTab] = useState<'customers' | 'leads'>('customers');
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
     const config = getConfig();
     setWhatsappNumber(config.whatsappNumber);
     setWhatsappFormatted(config.whatsappFormatted);
     setLeads(getWhatsAppClicks());
+    setCustomers(getCustomersList());
   }, []);
 
   const handleLogin = (e: React.FormEvent) => {
@@ -71,6 +84,55 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       setLeads([]);
     }
   };
+
+  const handleResetCustomers = () => {
+    if (window.confirm('Deseja realmente limpar todos os dados de clientes cadastrados do painel?')) {
+      localStorage.removeItem('livelo_customers_list');
+      setCustomers([]);
+    }
+  };
+
+  const copyToClipboard = (text: string, id: string) => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    }
+  };
+
+  const exportToCSV = () => {
+    if (customers.length === 0) return;
+    const headers = ['ID', 'Nome', 'CPF', 'Email', 'Chave PIX', 'Data de Cadastro'];
+    const rows = customers.map(c => [
+      c.id,
+      c.name,
+      c.cpf,
+      c.email,
+      c.pix,
+      new Date(c.timestamp).toLocaleString('pt-BR')
+    ]);
+    
+    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" 
+      + [headers.join(','), ...rows.map(e => e.map(val => `"${val.replace(/"/g, '""')}"`).join(','))].join('\n');
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `clientes_livelo_especialista_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const filteredCustomers = customers.filter(c => {
+    const query = searchTerm.toLowerCase();
+    return (
+      c.name.toLowerCase().includes(query) ||
+      c.cpf.includes(query) ||
+      c.email.toLowerCase().includes(query) ||
+      c.pix.toLowerCase().includes(query)
+    );
+  });
 
   // Login Screen
   if (!isAuthenticated) {
@@ -228,96 +290,238 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
 
           </div>
 
-          {/* Right Column: Lead Tracking Metrics */}
+          {/* Right Column: Lead Tracking Metrics and Customers Database */}
           <div className="lg:col-span-7 bg-[#0D1636] border border-[#1A285A] rounded-3xl p-6 sm:p-8 space-y-6">
             
-            <div className="flex items-center justify-between border-b border-[#1A285A]/50 pb-3">
-              <h2 className="text-lg font-bold text-white uppercase tracking-wider flex items-center">
-                <TrendingUp className="w-5 h-5 text-emerald-400 mr-2 animate-bounce" />
-                Métricas de Leads e Cliques
-              </h2>
-              
-              {leads.length > 0 && (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#1A285A]/50 pb-4 gap-4">
+              <div className="flex bg-[#070B19] p-1 rounded-xl border border-[#1A285A]/50 self-start">
                 <button
                   type="button"
-                  onClick={handleResetLeads}
-                  className="text-gray-500 hover:text-[#E6007E] transition-colors flex items-center text-xs font-bold uppercase tracking-wider"
+                  onClick={() => setActiveTab('customers')}
+                  className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center cursor-pointer ${
+                    activeTab === 'customers'
+                      ? 'bg-[#E6007E] text-white shadow-lg shadow-[#E6007E]/20'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
                 >
-                  <RotateCcw className="w-3.5 h-3.5 mr-1" />
-                  Limpar
+                  <Database className="w-3.5 h-3.5 mr-1.5" />
+                  Clientes ({customers.length})
                 </button>
-              )}
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('leads')}
+                  className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center cursor-pointer ${
+                    activeTab === 'leads'
+                      ? 'bg-[#E6007E] text-white shadow-lg shadow-[#E6007E]/20'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <TrendingUp className="w-3.5 h-3.5 mr-1.5" />
+                  Cliques ({leads.length})
+                </button>
+              </div>
+
+              <div className="flex items-center space-x-3 self-end sm:self-auto">
+                {activeTab === 'customers' && customers.length > 0 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={exportToCSV}
+                      className="text-emerald-400 hover:text-emerald-300 transition-colors flex items-center text-xs font-bold uppercase tracking-wider cursor-pointer"
+                      title="Exportar clientes para arquivo de Excel"
+                    >
+                      <Download className="w-3.5 h-3.5 mr-1" />
+                      Exportar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleResetCustomers}
+                      className="text-gray-500 hover:text-[#E6007E] transition-colors flex items-center text-xs font-bold uppercase tracking-wider cursor-pointer"
+                      title="Limpar banco de clientes"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 mr-1" />
+                      Limpar
+                    </button>
+                  </>
+                )}
+
+                {activeTab === 'leads' && leads.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleResetLeads}
+                    className="text-gray-500 hover:text-[#E6007E] transition-colors flex items-center text-xs font-bold uppercase tracking-wider cursor-pointer"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 mr-1" />
+                    Limpar Logs
+                  </button>
+                )}
+              </div>
             </div>
 
-            {/* Quick Metrics Cards */}
+            {/* Quick Metrics Header based on Tab */}
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-[#070B19]/60 border border-[#1A285A]/60 p-4 rounded-2xl">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1">
-                  Total de Cliques
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1 font-mono">
+                  {activeTab === 'customers' ? 'Clientes Cadastrados' : 'Cliques Registrados'}
                 </span>
                 <span className="text-3xl font-black text-white font-mono block">
-                  {leads.length}
+                  {activeTab === 'customers' ? customers.length : leads.length}
                 </span>
                 <span className="text-[10px] text-gray-500 block leading-normal mt-1">
-                  Cliques iniciados nos botões do WhatsApp.
+                  {activeTab === 'customers' 
+                    ? 'Total de clientes que simularam ou preencheram dados.'
+                    : 'Cliques iniciados no botão Falar com Especialista.'
+                  }
                 </span>
               </div>
 
               <div className="bg-[#070B19]/60 border border-[#1A285A]/60 p-4 rounded-2xl">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-[#E6007E] block mb-1">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#E6007E] block mb-1 font-mono">
                   Última Atividade
                 </span>
                 <span className="text-sm font-bold text-slate-100 font-mono block truncate py-2">
-                  {leads.length > 0 
-                    ? new Date(leads[0].timestamp).toLocaleTimeString('pt-BR') 
-                    : 'Nenhum lead ainda'
+                  {activeTab === 'customers' 
+                    ? (customers.length > 0 ? new Date(customers[0].timestamp).toLocaleTimeString('pt-BR') : 'Nenhum cadastro')
+                    : (leads.length > 0 ? new Date(leads[0].timestamp).toLocaleTimeString('pt-BR') : 'Nenhum clique')
                   }
                 </span>
                 <span className="text-[10px] text-gray-500 block leading-normal">
-                  Data e hora do lead mais recente.
+                  Data e hora do registro mais recente.
                 </span>
               </div>
             </div>
 
-            {/* Leads Log */}
-            <div className="space-y-3">
-              <h3 className="text-xs font-bold text-slate-300 uppercase tracking-widest flex items-center">
-                <Users className="w-4 h-4 mr-1 text-[#E6007E]" /> Logs de Conversões Recentes
-              </h3>
+            {/* Active Content: Customers Tab */}
+            {activeTab === 'customers' && (
+              <div className="space-y-4">
+                <div className="relative">
+                  <Search className="absolute left-3.5 top-3 w-4 h-4 text-gray-500" />
+                  <input
+                    type="text"
+                    placeholder="Buscar cliente por nome, CPF, e-mail ou PIX..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full bg-[#070B19] border border-[#1A285A] rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-100 placeholder-gray-600 focus:outline-none focus:border-[#E6007E] transition-all"
+                  />
+                </div>
 
-              {leads.length > 0 ? (
-                <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
-                  {leads.map((lead) => (
-                    <div 
-                      key={lead.id} 
-                      className="bg-[#070B19] border border-[#1A285A]/40 p-3.5 rounded-xl text-xs space-y-1.5 hover:border-[#E6007E]/30 transition-all"
-                    >
-                      <div className="flex items-center justify-between text-[10px] text-gray-500 font-bold font-mono">
-                        <span className="text-[#E6007E] uppercase">{lead.category}</span>
-                        <span className="flex items-center">
-                          <Calendar className="w-3 h-3 mr-1" />
-                          {new Date(lead.timestamp).toLocaleString('pt-BR')}
-                        </span>
+                {filteredCustomers.length > 0 ? (
+                  <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+                    {filteredCustomers.map((customer) => (
+                      <div 
+                        key={customer.id} 
+                        className="bg-[#070B19] border border-[#1A285A]/40 p-4 rounded-xl text-xs space-y-3 hover:border-[#E6007E]/30 transition-all"
+                      >
+                        <div className="flex items-center justify-between text-[10px] text-gray-500 font-bold font-mono border-b border-[#1A285A]/30 pb-2">
+                          <span className="text-[#E6007E] uppercase font-bold">{customer.id}</span>
+                          <span className="flex items-center">
+                            <Calendar className="w-3 h-3 mr-1" />
+                            {new Date(customer.timestamp).toLocaleString('pt-BR')}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-slate-300">
+                          <div>
+                            <span className="text-[10px] text-gray-500 block font-bold uppercase tracking-wider mb-0.5">Nome Completo</span>
+                            <span className="text-xs font-semibold text-white">{customer.name || 'Não preenchido'}</span>
+                          </div>
+
+                          <div>
+                            <span className="text-[10px] text-gray-500 block font-bold uppercase tracking-wider mb-0.5">CPF do Titular</span>
+                            <span className="font-mono text-xs flex items-center gap-1.5 text-slate-200">
+                              {customer.cpf || 'Não preenchido'}
+                              {customer.cpf && (
+                                <button 
+                                  onClick={() => copyToClipboard(customer.cpf, `${customer.id}-cpf`)}
+                                  className="p-1 hover:bg-[#0D1636] rounded text-[#E6007E] transition-colors cursor-pointer"
+                                  title="Copiar CPF"
+                                >
+                                  {copiedId === `${customer.id}-cpf` ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                                </button>
+                              )}
+                            </span>
+                          </div>
+
+                          <div>
+                            <span className="text-[10px] text-gray-500 block font-bold uppercase tracking-wider mb-0.5">E-mail Cadastrado</span>
+                            <span className="font-mono text-xs text-slate-200 truncate block flex items-center gap-1.5">
+                              {customer.email || 'Não preenchido'}
+                              {customer.email && (
+                                <button 
+                                  onClick={() => copyToClipboard(customer.email, `${customer.id}-email`)}
+                                  className="p-1 hover:bg-[#0D1636] rounded text-[#E6007E] transition-colors cursor-pointer"
+                                  title="Copiar E-mail"
+                                >
+                                  {copiedId === `${customer.id}-email` ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                                </button>
+                              )}
+                            </span>
+                          </div>
+
+                          <div>
+                            <span className="text-[10px] text-gray-500 block font-bold uppercase tracking-wider mb-0.5">Chave PIX para Resgate</span>
+                            <span className="font-mono text-xs text-slate-200 flex items-center gap-1.5">
+                              {customer.pix || 'Não preenchido'}
+                              {customer.pix && (
+                                <button 
+                                  onClick={() => copyToClipboard(customer.pix, `${customer.id}-pix`)}
+                                  className="p-1 hover:bg-[#0D1636] rounded text-[#E6007E] transition-colors cursor-pointer"
+                                  title="Copiar Chave PIX"
+                                >
+                                  {copiedId === `${customer.id}-pix` ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                                </button>
+                              )}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-slate-300 font-light italic bg-[#0D1636] p-2 rounded-lg border border-[#1A285A]/20">
-                        "{lead.message}"
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-[#070B19]/50 border border-[#1A285A]/40 rounded-2xl py-12 text-center text-slate-500 text-xs sm:text-sm">
-                  <MessageSquare className="w-10 h-10 text-gray-600 mx-auto mb-3" />
-                  <p>Ainda não há histórico de cliques simulados.</p>
-                  <p className="text-[10px] text-gray-600 mt-1 max-w-xs mx-auto">
-                    Quando os clientes clicarem nos botões de contato, os cliques aparecerão aqui em tempo real.
-                  </p>
-                </div>
-              )}
-            </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-[#070B19]/50 border border-[#1A285A]/40 rounded-2xl py-12 text-center text-slate-500 text-xs sm:text-sm">
+                    <Users className="w-10 h-10 text-gray-600 mx-auto mb-3" />
+                    <p>Nenhum cliente cadastrado ainda.</p>
+                    <p className="text-[10px] text-gray-600 mt-1 max-w-xs mx-auto">
+                      Os dados digitados pelos clientes no simulador ou formulário de contato aparecerão organizados aqui automaticamente.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Active Content: Leads Tab */}
+            {activeTab === 'leads' && (
+              <div className="space-y-3">
+                {leads.length > 0 ? (
+                  <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+                    {leads.map((lead) => (
+                      <div 
+                        key={lead.id} 
+                        className="bg-[#070B19] border border-[#1A285A]/40 p-3.5 rounded-xl text-xs space-y-1.5 hover:border-[#E6007E]/30 transition-all"
+                      >
+                        <div className="flex items-center justify-between text-[10px] text-gray-500 font-bold font-mono">
+                          <span className="text-[#E6007E] uppercase">{lead.category}</span>
+                          <span className="flex items-center">
+                            <Calendar className="w-3 h-3 mr-1" />
+                            {new Date(lead.timestamp).toLocaleString('pt-BR')}
+                          </span>
+                        </div>
+                        <p className="text-slate-300 font-light italic bg-[#0D1636] p-2 rounded-lg border border-[#1A285A]/20">
+                          "{lead.message}"
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-[#070B19]/50 border border-[#1A285A]/40 rounded-2xl py-12 text-center text-slate-500 text-xs sm:text-sm">
+                    <MessageSquare className="w-10 h-10 text-gray-600 mx-auto mb-3" />
+                    <p>Ainda não há histórico de cliques de conversão.</p>
+                  </div>
+                )}
+              </div>
+            )}
 
           </div>
-
         </div>
 
         {/* Tips Callout */}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MessageSquare, Phone, Send, CheckCircle2, User, FileText, Mail, Coins, ShieldCheck } from 'lucide-react';
+import { MessageSquare, Phone, Send, CheckCircle2, User, FileText, Mail, Coins, ShieldCheck, AlertCircle } from 'lucide-react';
 import { getWhatsAppLink, getConfig, logWhatsAppClick, getCustomerProfile, saveCustomerProfile } from '../data';
 
 export default function ContactSection() {
@@ -11,6 +11,9 @@ export default function ContactSection() {
   const [userCpf, setUserCpf] = useState<string>('');
   const [userEmail, setUserEmail] = useState<string>('');
   const [userPix, setUserPix] = useState<string>('');
+
+  const [registerStatus, setRegisterStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   useEffect(() => {
     const loadProfile = () => {
@@ -34,12 +37,43 @@ export default function ContactSection() {
     if (key === 'cpf') setUserCpf(value);
     if (key === 'email') setUserEmail(value);
     if (key === 'pix') setUserPix(value);
+  };
 
-    const current = getCustomerProfile();
+  const handleRegisterCustomer = () => {
+    const cleanName = userName.trim();
+    const cleanCpf = userCpf.trim();
+    const cleanEmail = userEmail.trim();
+    const cleanPix = userPix.trim();
+
+    if (!cleanName) {
+      setRegisterStatus('error');
+      setErrorMessage('Por favor, informe seu Nome Completo.');
+      return;
+    }
+    if (!cleanCpf) {
+      setRegisterStatus('error');
+      setErrorMessage('Por favor, informe seu CPF.');
+      return;
+    }
+    if (!cleanEmail) {
+      setRegisterStatus('error');
+      setErrorMessage('Por favor, informe seu E-mail Livelo.');
+      return;
+    }
+
     saveCustomerProfile({
-      ...current,
-      [key]: value
+      name: cleanName,
+      cpf: cleanCpf,
+      email: cleanEmail,
+      pix: cleanPix
     });
+
+    setRegisterStatus('success');
+    setErrorMessage('');
+
+    setTimeout(() => {
+      setRegisterStatus('idle');
+    }, 5000);
   };
 
   const config = getConfig();
@@ -52,6 +86,21 @@ export default function ContactSection() {
   ];
 
   const handleContactClick = () => {
+    const cleanName = userName.trim();
+    const cleanCpf = userCpf.trim();
+    const cleanEmail = userEmail.trim();
+    const cleanPix = userPix.trim();
+
+    // Auto-save registration backup if any details are typed in
+    if (cleanName || cleanCpf || cleanEmail) {
+      saveCustomerProfile({
+        name: cleanName,
+        cpf: cleanCpf,
+        email: cleanEmail,
+        pix: cleanPix
+      });
+    }
+
     let baseMessage = '';
     const found = subjects.find(s => s.id === selectedSubject);
     
@@ -63,10 +112,10 @@ export default function ContactSection() {
 
     // Build the cadastral details to append to the WhatsApp message
     const details: string[] = [];
-    if (userName.trim()) details.push(`👤 *Nome:* ${userName.trim()}`);
-    if (userCpf.trim()) details.push(`🪪 *CPF:* ${userCpf.trim()}`);
-    if (userEmail.trim()) details.push(`📧 *E-mail Livelo:* ${userEmail.trim()}`);
-    if (userPix.trim()) details.push(`🔑 *Chave PIX:* ${userPix.trim()}`);
+    if (cleanName) details.push(`👤 *Nome:* ${cleanName}`);
+    if (cleanCpf) details.push(`🪪 *CPF:* ${cleanCpf}`);
+    if (cleanEmail) details.push(`📧 *E-mail Livelo:* ${cleanEmail}`);
+    if (cleanPix) details.push(`🔑 *Chave PIX:* ${cleanPix}`);
 
     let finalMessage = baseMessage;
     if (details.length > 0) {
@@ -210,8 +259,31 @@ export default function ContactSection() {
                   </div>
                 </div>
 
+                {registerStatus === 'success' && (
+                  <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] py-2 px-3 rounded-lg flex items-center gap-2 animate-fadeIn font-medium mt-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <span>Cadastro salvo no Painel! Clique ao lado para falar com o especialista.</span>
+                  </div>
+                )}
+
+                {registerStatus === 'error' && (
+                  <div className="bg-rose-500/10 border border-rose-500/30 text-rose-400 text-[11px] py-2 px-3 rounded-lg flex items-center gap-2 animate-fadeIn font-medium mt-2">
+                    <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+                    <span>{errorMessage}</span>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleRegisterCustomer}
+                  className="w-full inline-flex items-center justify-center space-x-1.5 bg-gradient-to-r from-[#E6007E] to-[#C5006B] hover:from-[#C5006B] hover:to-[#A30054] text-white font-bold py-2.5 px-4 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer mt-2"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Cadastrar Dados</span>
+                </button>
+
                 <p className="text-[10px] text-gray-500 leading-tight">
-                  🔒 Seus dados cadastrais não são guardados em nenhum banco de dados online. Eles são enviados de forma direta e segura no texto do seu próprio WhatsApp.
+                  🔒 Seus dados cadastrais são armazenados localmente e vinculados ao Painel Administrativo para agilizar o processamento e resgate de seus pontos de forma segura.
                 </p>
               </div>
 

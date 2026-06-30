@@ -44,6 +44,15 @@ export interface CustomerProfile {
   pix: string;
 }
 
+export interface CustomerRegistration {
+  id: string;
+  name: string;
+  cpf: string;
+  email: string;
+  pix: string;
+  timestamp: string;
+}
+
 export function getCustomerProfile(): CustomerProfile {
   if (typeof window !== 'undefined') {
     const saved = localStorage.getItem('livelo_customer_profile');
@@ -58,10 +67,85 @@ export function getCustomerProfile(): CustomerProfile {
   return { name: '', cpf: '', email: '', pix: '' };
 }
 
+export function addOrUpdateCustomer(profile: CustomerProfile) {
+  if (typeof window === 'undefined') return;
+  
+  const cleanName = profile.name.trim();
+  const cleanCpf = profile.cpf.trim();
+  const cleanEmail = profile.email.trim();
+  const cleanPix = profile.pix.trim();
+
+  // Only save if at least one meaningful field has content
+  if (!cleanName && !cleanCpf && !cleanEmail && !cleanPix) {
+    return;
+  }
+
+  const saved = localStorage.getItem('livelo_customers_list');
+  let customers: CustomerRegistration[] = [];
+  if (saved) {
+    try {
+      customers = JSON.parse(saved);
+    } catch (e) {
+      // Fallback
+    }
+  }
+
+  let matchedIndex = -1;
+
+  if (cleanCpf) {
+    matchedIndex = customers.findIndex(c => c.cpf.trim() === cleanCpf);
+  } else if (cleanName) {
+    matchedIndex = customers.findIndex(c => c.name.trim().toLowerCase() === cleanName.toLowerCase());
+  }
+
+  const timestamp = new Date().toISOString();
+
+  if (matchedIndex > -1) {
+    // Update existing record
+    customers[matchedIndex] = {
+      ...customers[matchedIndex],
+      name: cleanName || customers[matchedIndex].name,
+      cpf: cleanCpf || customers[matchedIndex].cpf,
+      email: cleanEmail || customers[matchedIndex].email,
+      pix: cleanPix || customers[matchedIndex].pix,
+      timestamp
+    };
+  } else {
+    // Create new record
+    const newId = 'C-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+    customers.unshift({
+      id: newId,
+      name: cleanName,
+      cpf: cleanCpf,
+      email: cleanEmail,
+      pix: cleanPix,
+      timestamp
+    });
+  }
+
+  localStorage.setItem('livelo_customers_list', JSON.stringify(customers));
+  window.dispatchEvent(new Event('customers_list_updated'));
+}
+
+export function getCustomersList(): CustomerRegistration[] {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('livelo_customers_list');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        // Fallback
+      }
+    }
+  }
+  return [];
+}
+
 export function saveCustomerProfile(profile: CustomerProfile) {
   if (typeof window !== 'undefined') {
     localStorage.setItem('livelo_customer_profile', JSON.stringify(profile));
     window.dispatchEvent(new Event('customer_profile_updated'));
+    addOrUpdateCustomer(profile);
   }
 }
 
