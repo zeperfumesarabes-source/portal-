@@ -102,13 +102,14 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
 
   const exportToCSV = () => {
     if (customers.length === 0) return;
-    const headers = ['ID', 'Nome', 'CPF', 'Email', 'Chave PIX', 'Data de Cadastro'];
+    const headers = ['ID', 'Nome', 'CPF', 'Email', 'Chave PIX', 'WhatsApp / Contato', 'Data de Cadastro'];
     const rows = customers.map(c => [
       c.id,
       c.name,
       c.cpf,
       c.email,
       c.pix,
+      c.phone || '',
       new Date(c.timestamp).toLocaleString('pt-BR')
     ]);
     
@@ -130,7 +131,8 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       c.name.toLowerCase().includes(query) ||
       c.cpf.includes(query) ||
       c.email.toLowerCase().includes(query) ||
-      c.pix.toLowerCase().includes(query)
+      c.pix.toLowerCase().includes(query) ||
+      (c.phone && c.phone.toLowerCase().includes(query))
     );
   });
 
@@ -453,6 +455,22 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                                   title="Copiar E-mail"
                                 >
                                   {copiedId === `${customer.id}-email` ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                                </button>
+                              )}
+                            </span>
+                          </div>
+
+                          <div>
+                            <span className="text-[10px] text-gray-500 block font-bold uppercase tracking-wider mb-0.5">WhatsApp / Telefone</span>
+                            <span className="font-mono text-xs text-slate-200 truncate block flex items-center gap-1.5">
+                              {customer.phone || 'Não preenchido'}
+                              {customer.phone && (
+                                <button 
+                                  onClick={() => copyToClipboard(customer.phone, `${customer.id}-phone`)}
+                                  className="p-1 hover:bg-[#0D1636] rounded text-[#E6007E] transition-colors cursor-pointer"
+                                  title="Copiar WhatsApp / Telefone"
+                                >
+                                  {copiedId === `${customer.id}-phone` ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                                 </button>
                               )}
                             </span>

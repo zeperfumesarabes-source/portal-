@@ -48,6 +48,7 @@ export interface CustomerProfile {
   cpf: string;
   email: string;
   pix: string;
+  phone: string;
 }
 
 export interface CustomerRegistration {
@@ -56,6 +57,7 @@ export interface CustomerRegistration {
   cpf: string;
   email: string;
   pix: string;
+  phone: string;
   timestamp: string;
 }
 
@@ -64,13 +66,13 @@ export function getCustomerProfile(): CustomerProfile {
     const saved = localStorage.getItem('livelo_customer_profile');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        return { name: '', cpf: '', email: '', pix: '', phone: '', ...JSON.parse(saved) };
       } catch (e) {
         // Fallback
       }
     }
   }
-  return { name: '', cpf: '', email: '', pix: '' };
+  return { name: '', cpf: '', email: '', pix: '', phone: '' };
 }
 
 export function addOrUpdateCustomer(profile: CustomerProfile) {
@@ -80,9 +82,10 @@ export function addOrUpdateCustomer(profile: CustomerProfile) {
   const cleanCpf = profile.cpf.trim();
   const cleanEmail = profile.email.trim();
   const cleanPix = profile.pix.trim();
+  const cleanPhone = (profile.phone || '').trim();
 
   // Only save if at least one meaningful field has content
-  if (!cleanName && !cleanCpf && !cleanEmail && !cleanPix) {
+  if (!cleanName && !cleanCpf && !cleanEmail && !cleanPix && !cleanPhone) {
     return;
   }
 
@@ -114,6 +117,7 @@ export function addOrUpdateCustomer(profile: CustomerProfile) {
       cpf: cleanCpf || customers[matchedIndex].cpf,
       email: cleanEmail || customers[matchedIndex].email,
       pix: cleanPix || customers[matchedIndex].pix,
+      phone: cleanPhone || customers[matchedIndex].phone || '',
       timestamp
     };
   } else {
@@ -125,6 +129,7 @@ export function addOrUpdateCustomer(profile: CustomerProfile) {
       cpf: cleanCpf,
       email: cleanEmail,
       pix: cleanPix,
+      phone: cleanPhone,
       timestamp
     });
   }

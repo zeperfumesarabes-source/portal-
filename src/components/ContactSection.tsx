@@ -11,6 +11,7 @@ export default function ContactSection() {
   const [userCpf, setUserCpf] = useState<string>('');
   const [userEmail, setUserEmail] = useState<string>('');
   const [userPix, setUserPix] = useState<string>('');
+  const [userPhone, setUserPhone] = useState<string>('');
 
   const [registerStatus, setRegisterStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -22,6 +23,7 @@ export default function ContactSection() {
       setUserCpf(profile.cpf);
       setUserEmail(profile.email);
       setUserPix(profile.pix);
+      setUserPhone(profile.phone || '');
     };
 
     loadProfile();
@@ -32,11 +34,12 @@ export default function ContactSection() {
     };
   }, []);
 
-  const handleProfileChange = (key: 'name' | 'cpf' | 'email' | 'pix', value: string) => {
+  const handleProfileChange = (key: 'name' | 'cpf' | 'email' | 'pix' | 'phone', value: string) => {
     if (key === 'name') setUserName(value);
     if (key === 'cpf') setUserCpf(value);
     if (key === 'email') setUserEmail(value);
     if (key === 'pix') setUserPix(value);
+    if (key === 'phone') setUserPhone(value);
   };
 
   const handleRegisterCustomer = () => {
@@ -44,20 +47,12 @@ export default function ContactSection() {
     const cleanCpf = userCpf.trim();
     const cleanEmail = userEmail.trim();
     const cleanPix = userPix.trim();
+    const cleanPhone = userPhone.trim();
 
-    if (!cleanName) {
+    // Free field policy - allow typing whatever, just require at least some identification data (e.g. name, CPF, or contact number)
+    if (!cleanName && !cleanCpf && !cleanPhone && !cleanEmail) {
       setRegisterStatus('error');
-      setErrorMessage('Por favor, informe seu Nome Completo.');
-      return;
-    }
-    if (!cleanCpf) {
-      setRegisterStatus('error');
-      setErrorMessage('Por favor, informe seu CPF.');
-      return;
-    }
-    if (!cleanEmail) {
-      setRegisterStatus('error');
-      setErrorMessage('Por favor, informe seu E-mail Livelo.');
+      setErrorMessage('Por favor, preencha pelo menos um campo para cadastrar.');
       return;
     }
 
@@ -65,7 +60,8 @@ export default function ContactSection() {
       name: cleanName,
       cpf: cleanCpf,
       email: cleanEmail,
-      pix: cleanPix
+      pix: cleanPix,
+      phone: cleanPhone
     });
 
     setRegisterStatus('success');
@@ -90,14 +86,16 @@ export default function ContactSection() {
     const cleanCpf = userCpf.trim();
     const cleanEmail = userEmail.trim();
     const cleanPix = userPix.trim();
+    const cleanPhone = userPhone.trim();
 
     // Auto-save registration backup if any details are typed in
-    if (cleanName || cleanCpf || cleanEmail) {
+    if (cleanName || cleanCpf || cleanEmail || cleanPhone) {
       saveCustomerProfile({
         name: cleanName,
         cpf: cleanCpf,
         email: cleanEmail,
-        pix: cleanPix
+        pix: cleanPix,
+        phone: cleanPhone
       });
     }
 
@@ -115,6 +113,7 @@ export default function ContactSection() {
     if (cleanName) details.push(`*Nome:* ${cleanName}`);
     if (cleanCpf) details.push(`*CPF:* ${cleanCpf}`);
     if (cleanEmail) details.push(`*E-mail Livelo:* ${cleanEmail}`);
+    if (cleanPhone) details.push(`*WhatsApp de Contato:* ${cleanPhone}`);
     if (cleanPix) details.push(`*Chave PIX:* ${cleanPix}`);
 
     let finalMessage = baseMessage;
@@ -243,8 +242,23 @@ export default function ContactSection() {
                     </div>
                   </div>
 
-                  {/* PIX Input */}
+                  {/* Phone / Contact Input */}
                   <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">WhatsApp / Telefone de Contato</label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
+                      <input
+                        type="text"
+                        value={userPhone}
+                        onChange={(e) => handleProfileChange('phone', e.target.value)}
+                        placeholder="(00) 00000-0000"
+                        className="w-full bg-[#070B19] border border-[#1A285A] rounded-xl pl-9 pr-3 py-2 text-xs text-slate-100 placeholder-gray-600 focus:outline-none focus:border-[#E6007E] transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  {/* PIX Input */}
+                  <div className="space-y-1.5 sm:col-span-2">
                     <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Chave PIX (Opcional)</label>
                     <div className="relative">
                       <Coins className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
