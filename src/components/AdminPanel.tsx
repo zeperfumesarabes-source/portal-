@@ -50,6 +50,32 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
     setWhatsappFormatted(config.whatsappFormatted);
     setLeads(getWhatsAppClicks());
     setCustomers(getCustomersList());
+
+    const handleCustomersUpdate = () => {
+      setCustomers(getCustomersList());
+    };
+
+    const handleLeadsUpdate = () => {
+      setLeads(getWhatsAppClicks());
+    };
+
+    window.addEventListener('customers_list_updated', handleCustomersUpdate);
+    window.addEventListener('whatsapp_clicks_updated', handleLeadsUpdate);
+    // Also listen to storage changes for cross-tab or quick testing support
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'livelo_customers_list') {
+        setCustomers(getCustomersList());
+      } else if (e.key === 'livelo_leads') {
+        setLeads(getWhatsAppClicks());
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('customers_list_updated', handleCustomersUpdate);
+      window.removeEventListener('whatsapp_clicks_updated', handleLeadsUpdate);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   const handleLogin = (e: React.FormEvent) => {

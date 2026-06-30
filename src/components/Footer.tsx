@@ -68,10 +68,16 @@ export default function Footer() {
         </div>
 
         {/* Made with signet */}
-        <div className="mt-8 pt-6 border-t border-[#1A285A]/30 text-center text-[10px] text-gray-600 flex items-center justify-center space-x-1 font-light">
-          <span>Desenvolvido com</span>
-          <Heart className="w-3 h-3 text-[#E6007E] fill-current" />
-          <span>para simplificar suas viagens.</span>
+        <div className="mt-8 pt-6 border-t border-[#1A285A]/30 text-center text-[10px] text-gray-600 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 font-light">
+          <div className="flex items-center space-x-1">
+            <span>Desenvolvido com</span>
+            <Heart className="w-3 h-3 text-[#E6007E] fill-current" />
+            <span>para simplificar suas viagens.</span>
+          </div>
+          <span className="hidden sm:inline text-gray-700">|</span>
+          <a href="#admin" className="text-gray-500 hover:text-[#E6007E] transition-colors font-medium">
+            Acessar Painel Admin
+          </a>
         </div>
 
       </div>

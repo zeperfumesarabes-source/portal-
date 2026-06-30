@@ -66,11 +66,6 @@ export default function Simulator() {
 
     setRegisterStatus('success');
     setErrorMessage('');
-
-    // Auto reset success message after 5 seconds
-    setTimeout(() => {
-      setRegisterStatus('idle');
-    }, 5000);
   };
 
   // Filter the options that fit the current points range and selected category
@@ -320,7 +315,7 @@ export default function Simulator() {
                   {registerStatus === 'success' && (
                     <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] py-2 px-3 rounded-lg flex items-center gap-2 animate-fadeIn font-medium mt-2">
                       <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                      <span>Cadastro salvo no Painel! Prossiga abaixo para falar com o especialista.</span>
+                      <span>cadastro feito com sucesso!!! para resgatar clique em falar com especialista</span>
                     </div>
                   )}
 
