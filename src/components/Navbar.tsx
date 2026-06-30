@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageSquare, ShieldCheck, Settings } from 'lucide-react';
+import { MessageSquare, ShieldCheck } from 'lucide-react';
 import { getWhatsAppLink, getConfig, logWhatsAppClick } from '../data';
 
 export default function Navbar() {
@@ -40,10 +40,6 @@ export default function Navbar() {
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#1A285A] text-slate-100 border border-[#E6007E]/30">
               <ShieldCheck className="w-3.5 h-3.5 mr-1 text-[#E6007E]" /> Atendimento Verificado
             </span>
-            <a href="#admin" className="text-gray-500 hover:text-white transition-colors flex items-center space-x-1 font-mono text-xs">
-              <Settings className="w-3.5 h-3.5" />
-              <span>Admin</span>
-            </a>
           </nav>
 
           {/* Quick CTA to WhatsApp */}

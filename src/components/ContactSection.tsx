@@ -112,10 +112,10 @@ export default function ContactSection() {
 
     // Build the cadastral details to append to the WhatsApp message
     const details: string[] = [];
-    if (cleanName) details.push(`👤 *Nome:* ${cleanName}`);
-    if (cleanCpf) details.push(`🪪 *CPF:* ${cleanCpf}`);
-    if (cleanEmail) details.push(`📧 *E-mail Livelo:* ${cleanEmail}`);
-    if (cleanPix) details.push(`🔑 *Chave PIX:* ${cleanPix}`);
+    if (cleanName) details.push(`*Nome:* ${cleanName}`);
+    if (cleanCpf) details.push(`*CPF:* ${cleanCpf}`);
+    if (cleanEmail) details.push(`*E-mail Livelo:* ${cleanEmail}`);
+    if (cleanPix) details.push(`*Chave PIX:* ${cleanPix}`);
 
     let finalMessage = baseMessage;
     if (details.length > 0) {

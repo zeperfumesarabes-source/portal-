@@ -110,10 +110,10 @@ export default function Simulator() {
     let baseMessage = `Olá! Fiz uma simulação no site com ${formattedPoints} pontos na categoria de ${category}. Tenho interesse em resgatar o benefício: *${rewardTitle}*. Gostaria de falar com um especialista.`;
     
     const details: string[] = [];
-    if (cleanName) details.push(`👤 *Nome:* ${cleanName}`);
-    if (cleanCpf) details.push(`🪪 *CPF:* ${cleanCpf}`);
-    if (cleanEmail) details.push(`📧 *E-mail Livelo:* ${cleanEmail}`);
-    if (cleanPix) details.push(`🔑 *Chave PIX:* ${cleanPix}`);
+    if (cleanName) details.push(`*Nome:* ${cleanName}`);
+    if (cleanCpf) details.push(`*CPF:* ${cleanCpf}`);
+    if (cleanEmail) details.push(`*E-mail Livelo:* ${cleanEmail}`);
+    if (cleanPix) details.push(`*Chave PIX:* ${cleanPix}`);
 
     let finalMessage = baseMessage;
     if (details.length > 0) {

@@ -6,8 +6,8 @@ export interface AppConfig {
 }
 
 const DEFAULT_CONFIG: AppConfig = {
-  whatsappNumber: '5573998630223',
-  whatsappFormatted: '(73) 99863-0223',
+  whatsappNumber: '5513996778439',
+  whatsappFormatted: '(13) 99677-8439',
 };
 
 export function getConfig(): AppConfig {
@@ -15,7 +15,13 @@ export function getConfig(): AppConfig {
     const saved = localStorage.getItem('livelo_config');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (parsed && (parsed.whatsappNumber === '5573998630223' || !parsed.whatsappNumber)) {
+          parsed.whatsappNumber = DEFAULT_CONFIG.whatsappNumber;
+          parsed.whatsappFormatted = DEFAULT_CONFIG.whatsappFormatted;
+          localStorage.setItem('livelo_config', JSON.stringify(parsed));
+        }
+        return parsed;
       } catch (e) {
         // Fallback
       }
