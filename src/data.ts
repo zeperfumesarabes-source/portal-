@@ -37,6 +37,34 @@ export interface LeadClick {
   message: string;
 }
 
+export interface CustomerProfile {
+  name: string;
+  cpf: string;
+  email: string;
+  pix: string;
+}
+
+export function getCustomerProfile(): CustomerProfile {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('livelo_customer_profile');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        // Fallback
+      }
+    }
+  }
+  return { name: '', cpf: '', email: '', pix: '' };
+}
+
+export function saveCustomerProfile(profile: CustomerProfile) {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('livelo_customer_profile', JSON.stringify(profile));
+    window.dispatchEvent(new Event('customer_profile_updated'));
+  }
+}
+
 export function logWhatsAppClick(category: string, message: string) {
   if (typeof window !== 'undefined') {
     const saved = localStorage.getItem('livelo_leads');

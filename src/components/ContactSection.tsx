@@ -1,16 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MessageSquare, Phone, Send, CheckCircle2, User, FileText, Mail, Coins, ShieldCheck } from 'lucide-react';
-import { getWhatsAppLink, getConfig, logWhatsAppClick } from '../data';
+import { getWhatsAppLink, getConfig, logWhatsAppClick, getCustomerProfile, saveCustomerProfile } from '../data';
 
 export default function ContactSection() {
   const [selectedSubject, setSelectedSubject] = useState<string>('viagem');
   const [customDestination, setCustomDestination] = useState<string>('');
   
-  // New Customer Information States
+  // Synced Customer Profile States
   const [userName, setUserName] = useState<string>('');
   const [userCpf, setUserCpf] = useState<string>('');
   const [userEmail, setUserEmail] = useState<string>('');
   const [userPix, setUserPix] = useState<string>('');
+
+  useEffect(() => {
+    const loadProfile = () => {
+      const profile = getCustomerProfile();
+      setUserName(profile.name);
+      setUserCpf(profile.cpf);
+      setUserEmail(profile.email);
+      setUserPix(profile.pix);
+    };
+
+    loadProfile();
+
+    window.addEventListener('customer_profile_updated', loadProfile);
+    return () => {
+      window.removeEventListener('customer_profile_updated', loadProfile);
+    };
+  }, []);
+
+  const handleProfileChange = (key: 'name' | 'cpf' | 'email' | 'pix', value: string) => {
+    if (key === 'name') setUserName(value);
+    if (key === 'cpf') setUserCpf(value);
+    if (key === 'email') setUserEmail(value);
+    if (key === 'pix') setUserPix(value);
+
+    const current = getCustomerProfile();
+    saveCustomerProfile({
+      ...current,
+      [key]: value
+    });
+  };
 
   const config = getConfig();
 
@@ -127,7 +157,7 @@ export default function ContactSection() {
                       <input
                         type="text"
                         value={userName}
-                        onChange={(e) => setUserName(e.target.value)}
+                        onChange={(e) => handleProfileChange('name', e.target.value)}
                         placeholder="Nome do Cliente"
                         className="w-full bg-[#070B19] border border-[#1A285A] rounded-xl pl-9 pr-3 py-2 text-xs text-slate-100 placeholder-gray-600 focus:outline-none focus:border-[#E6007E] transition-all"
                       />
@@ -142,7 +172,7 @@ export default function ContactSection() {
                       <input
                         type="text"
                         value={userCpf}
-                        onChange={(e) => setUserCpf(e.target.value)}
+                        onChange={(e) => handleProfileChange('cpf', e.target.value)}
                         placeholder="000.000.000-00"
                         className="w-full bg-[#070B19] border border-[#1A285A] rounded-xl pl-9 pr-3 py-2 text-xs text-slate-100 placeholder-gray-600 focus:outline-none focus:border-[#E6007E] transition-all"
                       />
@@ -157,7 +187,7 @@ export default function ContactSection() {
                       <input
                         type="email"
                         value={userEmail}
-                        onChange={(e) => setUserEmail(e.target.value)}
+                        onChange={(e) => handleProfileChange('email', e.target.value)}
                         placeholder="seu-email@exemplo.com"
                         className="w-full bg-[#070B19] border border-[#1A285A] rounded-xl pl-9 pr-3 py-2 text-xs text-slate-100 placeholder-gray-600 focus:outline-none focus:border-[#E6007E] transition-all"
                       />
@@ -172,7 +202,7 @@ export default function ContactSection() {
                       <input
                         type="text"
                         value={userPix}
-                        onChange={(e) => setUserPix(e.target.value)}
+                        onChange={(e) => handleProfileChange('pix', e.target.value)}
                         placeholder="Celular, CPF ou E-mail para recebimento"
                         className="w-full bg-[#070B19] border border-[#1A285A] rounded-xl pl-9 pr-3 py-2 text-xs text-slate-100 placeholder-gray-600 focus:outline-none focus:border-[#E6007E] transition-all"
                       />

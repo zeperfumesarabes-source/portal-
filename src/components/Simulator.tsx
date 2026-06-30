@@ -1,16 +1,46 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Coins, HelpCircle, ArrowRight, Plane, Building2, Ship, ShoppingBag, Sparkles, User, FileText, Mail, ShieldCheck } from 'lucide-react';
-import { REDEMPTION_OPTIONS, getWhatsAppLink, logWhatsAppClick } from '../data';
+import { REDEMPTION_OPTIONS, getWhatsAppLink, logWhatsAppClick, getCustomerProfile, saveCustomerProfile } from '../data';
 
 export default function Simulator() {
   const [points, setPoints] = useState<number>(45000);
   const [category, setCategory] = useState<string>('Passagens');
 
-  // New Customer States for Simulator
+  // Customer profile loaded reactively from centralized state
   const [userName, setUserName] = useState<string>('');
   const [userCpf, setUserCpf] = useState<string>('');
   const [userEmail, setUserEmail] = useState<string>('');
   const [userPix, setUserPix] = useState<string>('');
+
+  useEffect(() => {
+    const loadProfile = () => {
+      const profile = getCustomerProfile();
+      setUserName(profile.name);
+      setUserCpf(profile.cpf);
+      setUserEmail(profile.email);
+      setUserPix(profile.pix);
+    };
+
+    loadProfile();
+
+    window.addEventListener('customer_profile_updated', loadProfile);
+    return () => {
+      window.removeEventListener('customer_profile_updated', loadProfile);
+    };
+  }, []);
+
+  const handleProfileChange = (key: 'name' | 'cpf' | 'email' | 'pix', value: string) => {
+    if (key === 'name') setUserName(value);
+    if (key === 'cpf') setUserCpf(value);
+    if (key === 'email') setUserEmail(value);
+    if (key === 'pix') setUserPix(value);
+
+    const current = getCustomerProfile();
+    saveCustomerProfile({
+      ...current,
+      [key]: value
+    });
+  };
 
   // Filter the options that fit the current points range and selected category
   const activeOptions = useMemo(() => {
@@ -188,7 +218,7 @@ export default function Simulator() {
                       <input
                         type="text"
                         value={userName}
-                        onChange={(e) => setUserName(e.target.value)}
+                        onChange={(e) => handleProfileChange('name', e.target.value)}
                         placeholder="Nome Completo"
                         className="w-full bg-[#070B19] border border-[#1A285A] rounded-lg pl-8 pr-2 py-2 text-xs text-slate-100 placeholder-gray-600 focus:outline-none focus:border-[#E6007E] transition-all"
                       />
@@ -198,7 +228,7 @@ export default function Simulator() {
                       <input
                         type="text"
                         value={userCpf}
-                        onChange={(e) => setUserCpf(e.target.value)}
+                        onChange={(e) => handleProfileChange('cpf', e.target.value)}
                         placeholder="CPF do Titular"
                         className="w-full bg-[#070B19] border border-[#1A285A] rounded-lg pl-8 pr-2 py-2 text-xs text-slate-100 placeholder-gray-600 focus:outline-none focus:border-[#E6007E] transition-all"
                       />
@@ -211,7 +241,7 @@ export default function Simulator() {
                       <input
                         type="email"
                         value={userEmail}
-                        onChange={(e) => setUserEmail(e.target.value)}
+                        onChange={(e) => handleProfileChange('email', e.target.value)}
                         placeholder="E-mail Livelo"
                         className="w-full bg-[#070B19] border border-[#1A285A] rounded-lg pl-8 pr-2 py-2 text-xs text-slate-100 placeholder-gray-600 focus:outline-none focus:border-[#E6007E] transition-all"
                       />
@@ -221,7 +251,7 @@ export default function Simulator() {
                       <input
                         type="text"
                         value={userPix}
-                        onChange={(e) => setUserPix(e.target.value)}
+                        onChange={(e) => handleProfileChange('pix', e.target.value)}
                         placeholder="Chave PIX (Opcional)"
                         className="w-full bg-[#070B19] border border-[#1A285A] rounded-lg pl-8 pr-2 py-2 text-xs text-slate-100 placeholder-gray-600 focus:outline-none focus:border-[#E6007E] transition-all"
                       />
